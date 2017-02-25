@@ -38,4 +38,214 @@ with(gavote, sum(ballots-votes)/sum(ballots))
 overall<-gavote %>% summarize(sumdiff = sum(ballots-votes), sum = sum(ballots), proportionUndervotes = round(sumdiff/sum,3) )
 overall$proportionUndervotes
 ```
+```{r}
+hist(gavote$undercount, main="Undercount", xlab="Percent Undercount")
+
+gavote %>% ggplot(aes(undercount)) + 
+               geom_histogram(binwidth = 0.01)   
+```
+
+```{r}
+plot(density(gavote$undercount), main="Undercount")
+rug(gavote$undercount)
+```
+```{r}
+gavote %>% ggplot(aes(undercount)) + 
+               geom_density() +
+               geom_rug() + 
+               theme_minimal()
+```
+
+```{r}
+pie(table(gavote$equip), col=gray(0:4/4))
+```
+```{r}
+gavote %>% ggplot(aes(equip, fill=econ)) +
+               geom_bar()
+
+gavote %>% ggplot(aes(equip, fill=econ)) +
+               geom_bar(position="fill")
+```
+```{r}
+gavote$pergore <- gavote$gore/gavote$votes 
+plot(pergore ~ perAA, gavote, xlab="Proportion African American", ylab = "Proportion for Gore", pch=20, col="blue")
+
+
+```
+```{r}
+gavote %>% ggplot(aes(equip, undercount)) + 
+               geom_boxplot() 
+```
+
+```{r}
+xtabs(~atlanta + rural, gavote)
+```
+```{r}
+names(gavote)
+```
+```{r}
+gavote <- gavote %>% rename(usage = rural)
+names(gavote)
+```
+
+```{r}
+nix <- gavote %>% select(perAA, ballots, undercount, pergore)
+nix
+```
+
+
+```{r}
+cor(nix)
+```
+
+```{r}
+lmod <- lm(undercount ~ pergore + perAA, gavote)
+lmod
+coef(lmod)
+```
+```{r}
+predict(lmod)
+```
+
+```{r}
+residuals(lmod)
+```
+```{r}
+deviance(lmod)
+df.residual(lmod)
+nrow(gavote) - length(coef(lmod))
+sqrt(deviance(lmod)/df.residual(lmod))  # residual standard error
+```
+
+```{r}
+lmodsum <- summary(lmod)
+lmodsum
+lmodsum$sigma       # also residual standard error (see above)
+lmodsum$r.squared
+```
+
+```{r}
+lmodsum$r.squared
+cor(predict(lmod),gavote$undercount)^2  
+lmodsum$adj.r.squared
+```
+
+```{r}
+lmod
+coef(lmod)
+
+summary(lmod)
+```
+
+```{r}
+sumary(lmod)               # library(faraway)
+```
+```{r}
+gavote$cpergore <- gavote$pergore - mean(gavote$pergore)
+gavote$cperAA <- gavote$perAA - mean(gavote$perAA)
+lmodi <- lm(undercount ~ cperAA + cpergore * usage + equip, gavote)
+sumary(lmodi)
+```
+
+```{r}
+anova(lmod, lmodi)
+```
+
+```{r}
+drop1(lmodi, test="F")
+```
+
+```{r}
+confint(lmodi)
+```
+```{r}
+plot(lmodi)
+```
+
+```{r}
+gavote[cooks.distance(lmodi) > 0.1,]
+```
+
+```{r}
+halfnorm(hatvalues(lmodi))
+```
+
+```{r}
+gavote[hatvalues(lmodi) > 0.3,]
+```
+
+```{r}
+termplot(lmodi, partial = TRUE, terms = 1)
+```
+```{r}
+library(MASS)
+library(dplyr)  # to avoid masking of select by MASS package
+rlmodi <- rlm(undercount ~ cperAA + cpergore * usage + equip, gavote)
+summary(rlmodi)
+```
+
+```{r weighted least squares}
+wlmodi <- lm(undercount ~ cperAA + cpergore * usage + equip, gavote, weights=ballots)
+wlmodi
+```
+
+```{r}
+sqrt(0.035*(1-0.035)/881)
+```
+```{r transformation}
+plmodi <- lm(undercount ~ poly(cperAA, 4) + cpergore * usage + equip, gavote)
+summary(plmodi)
+```
+
+```{r}
+termplot(plmodi, partial = TRUE, terms = 1)
+```
+
+```{r}
+library(splines)
+blmodi <- lm(undercount ~ cperAA + bs(cpergore, 4) + usage + equip, gavote)
+blmodi
+```
+
+```{r}
+biglm <- lm(undercount ~ (equip + econ + usage + atlanta)^2 + (equip + econ + usage + atlanta)*(perAA + pergore), gavote)
+biglm
+```
+```{r}
+smallm <- step(biglm, trace=FALSE)
+smallm
+```
+```{r}
+drop1(smallm, test="F")
+```
+
+```{r}
+finalm <- lm(undercount ~ equip + econ + perAA + equip:econ + equip:perAA, gavote)
+finalm
+summary(finalm)
+```
+
+```{r}
+pdf <- data.frame(econ=rep(levels(gavote$econ), 5), equip=rep(levels(gavote$equip), rep(3,5)), perAA=0.233)
+pdf
+
+pp <- predict(finalm, new=pdf)
+pp 
+xtabs(round(pp, 3) ~ econ + equip, pdf)
+```
+```{r}
+pdf <- data.frame(econ = rep("middle", 15), equip=rep(levels(gavote$equip), rep(3,5)), perAA=rep(c(.11, 0.23,0.35), 5))
+pdf
+pp <- predict(finalm, new=pdf)
+pp
+```
+
+```{r}
+propAA <- gl(3,1,15, labels=c("low","medium","high"))
+xtabs(round(pp, 3) ~ propAA + equip,pdf)
+```
+
+
+
+
 
