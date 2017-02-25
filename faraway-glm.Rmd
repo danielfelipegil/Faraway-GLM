@@ -20,3 +20,9 @@ gavote
 glimpse(gavote)
 ```
 
+```{r}
+help(gavote)
+help("quantile")
+help.search("quantiles")
+```
+
