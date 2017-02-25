@@ -1,28 +1,41 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "faraway-glm.Rmd"
+author: "Robesyn"
+date: "25 February 2017"
+output: word_document
 ---
 
 Code Faraway GLM
-```{r packages}
+```{r packages, echo=F}
 library(tidyverse)
-```
-
-```{r }
-install.packages("faraway")
 library(faraway)
-gavote
 ```
 
-```{r}
+```{r inspect}
 head(gavote)
-gavote
 glimpse(gavote)
+summary(gavote)
 ```
 
-```{r}
-help(gavote)
-help("quantile")
-help.search("quantiles")
+Per county (rows)
+
+```{r undercount per county}
+gavote$undercount <- (gavote$ballots - gavote$votes)/gavote$ballots
+summary(gavote$undercount)
+```
+
+```{r undercount per county with dplyr}
+percounty<- gavote %>% mutate(diff = ballots-votes, undercount = diff/ballots)
+summary(percounty$undercount)
+```
+
+Note this is different than overall, for all counties together
+```{r undercount overall}
+with(gavote, sum(ballots-votes)/sum(ballots))
+```
+
+```{r undercount overall with dplyr}
+overall<-gavote %>% summarize(sumdiff = sum(ballots-votes), sum = sum(ballots), proportionUndervotes = round(sumdiff/sum,3) )
+overall$proportionUndervotes
 ```
 
