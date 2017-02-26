@@ -5,7 +5,7 @@ date: "25 February 2017"
 output: word_document
 ---
 
-Code Faraway GLM
+Code Faraway GLM - chapter Introduction
 ```{r packages, echo=F}
 library(tidyverse)
 library(faraway)

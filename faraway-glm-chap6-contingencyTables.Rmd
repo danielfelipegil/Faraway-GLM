@@ -1,0 +1,78 @@
+---
+title: "faraway-glm-chap6-contingencyTables"
+author: "Robesyn"
+date: "26 February 2017"
+output: html_document
+---
+
+Code Faraway GLM - chapter 6 'Contingency tables'
+
+6.5 Three-way Contingency Tables
+
+```{r packages, echo=F}
+library(tidyverse)
+library(faraway)
+```
+
+```{r}
+data(femsmoke)
+femsmoke
+```
+
+```{r}
+(ct <- xtabs(y ~ smoker + dead, femsmoke))
+```
+
+
+```{r}
+prop.table(ct, 1)  # 1 for row proportions (2 for col proportions)
+```
+
+```{r}
+summary(ct)
+```
+
+```{r}
+(cta <- xtabs(y ~ smoker + dead, femsmoke, subset = (age=="55-64")))
+```
+
+```{r}
+prop.table(cta, 1)
+```
+
+```{r}
+prop.table(xtabs(y ~ smoker + age, femsmoke), 2)
+```
+
+```{r}
+fisher.test(cta)
+```
+
+```{r}
+ct3  <- xtabs(y ~ smoker + dead + age, femsmoke)
+apply(ct3, 3, function(x) (x[1,1]*x[2,2]) / (x[1,2] * x[2,1]))
+```
+
+```{r}
+mantelhaen.test(ct3, exact=TRUE)
+```
+
+```{r}
+summary(ct3)
+```
+
+```{r}
+modi <- glm(y ~ smoker + dead + age, femsmoke, family = poisson)
+c(deviance(modi), df.residual(modi))
+```
+```{r}
+(coefsmoke <- exp(c(0, coef(modi)[2])))
+```
+
+```{r}
+coefsmoke/sum(coefsmoke)
+```
+```{r}
+prop.table(xtabs(y ~ smoker, femsmoke))
+```
+
