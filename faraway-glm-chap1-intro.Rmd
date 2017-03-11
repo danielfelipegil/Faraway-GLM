@@ -1,60 +1,119 @@
 ---
-title: "faraway-glm.Rmd"
+title: "faraway-glm-chap1-intro.Rmd"
 author: "Robesyn"
 date: "25 February 2017"
-output: word_document
+output:
+  html_document: default
+  word_document: default
 ---
 
 Code Faraway GLM - chapter Introduction
+
 ```{r packages, echo=F}
 library(tidyverse)
 library(faraway)
+library(forcats)
+library(ggalt)
+library(hrbrthemes)
 ```
 
 ```{r inspect}
 head(gavote)
+help(quantile)
+help.search("quantiles")
 glimpse(gavote)
 summary(gavote)
 ```
 
-Per county (rows)
-
-```{r undercount per county}
-gavote$undercount <- (gavote$ballots - gavote$votes)/gavote$ballots
+Per county (=rows)
+```{r undercount per county} 
+gavote <- gavote %>% mutate(undercount = (ballots - votes)/ballots)
 summary(gavote$undercount)
 ```
 
-```{r undercount per county with dplyr}
-percounty<- gavote %>% mutate(diff = ballots-votes, undercount = diff/ballots)
-summary(percounty$undercount)
-```
 
 Note this is different than overall, for all counties together
 ```{r undercount overall}
-with(gavote, sum(ballots-votes)/sum(ballots))
-```
-
-```{r undercount overall with dplyr}
-overall<-gavote %>% summarize(sumdiff = sum(ballots-votes), sum = sum(ballots), proportionUndervotes = round(sumdiff/sum,3) )
+overall <- gavote %>% summarize(sumdiff = sum(ballots-votes), sum = sum(ballots), proportionUndervotes = round(sumdiff/sum,3) )
 overall$proportionUndervotes
 ```
-```{r}
-hist(gavote$undercount, main="Undercount", xlab="Percent Undercount")
 
+```{r}
+gavote %>% ggplot(aes(undercount)) +
+               geom_histogram() +
+               ggtitle("Undercount") +
+               xlab("Percent Undercount")
+```
+
+```{r}
 gavote %>% ggplot(aes(undercount)) + 
                geom_histogram(binwidth = 0.01)   
 ```
 
 ```{r}
-plot(density(gavote$undercount), main="Undercount")
+gavote %>% ggplot(aes(undercount)) +
+               geom_histogram(bins=10, fill="violet") +
+               ggtitle("Undercount") +
+               xlab("Percent Undercount") +
+               ylab("Count")
+```
+
+```{r}
+plot(density(gavote$undercount), main="Undercount") 
 rug(gavote$undercount)
+# base density plot gives bandwith of the kernel density (not in ggplot!)
+
+# worked before but not anymore - plot.new 
 ```
 ```{r}
-gavote %>% ggplot(aes(undercount)) + 
+gavote %>% ggplot(aes(undercount)) +
                geom_density() +
-               geom_rug() + 
-               theme_minimal()
+               geom_rug() +
+               ggtitle("Undercount") +
+               xlab("Percent Undercount") +
+               ylab("Count")   
+## ggplot does not give bandwith and N of kernel density (even if I do not give xlab)
 ```
+
+```{r value of max value}
+max(gavote$undercount)  # idem as seen in summary
+```
+
+```{r}
+levels(gavote$equip)
+```
+
+```{r for paper}
+gavote %>% ggplot(aes(fct_rev(fct_infreq(equip)))) +
+               geom_bar(fill="violet")+ 
+               coord_flip() +
+               ggtitle("Equipment frequencies") +
+               xlab("Equipment") +
+               ylab("Count") 
+```
+
+```{r for ppt}
+gavote %>% ggplot(aes(fct_rev(fct_infreq(equip)))) +
+               geom_bar(fill="violet")+ 
+               coord_flip() +
+               ggtitle("Equipment frequencies") +
+               xlab("Equipment") +
+               ylab("Count") + 
+               
+               theme_minimal() +
+               
+               theme( 
+                              plot.title=element_text(size=25, face="bold"),
+                              axis.title=element_text(size=20, face="bold"),
+                              axis.text=element_text(size=18, face="bold"),
+                              #panel.background = element_blank(),
+                              plot.margin = margin(2,2,2,2)) +
+               labs(
+                              x = "\nEquipment\n",
+                              y = "\nCount\n",
+                              title="\nEquipment frequencies\n")  
+```
+
 
 ```{r}
 pie(table(gavote$equip), col=gray(0:4/4))
@@ -69,8 +128,6 @@ gavote %>% ggplot(aes(equip, fill=econ)) +
 ```{r}
 gavote$pergore <- gavote$gore/gavote$votes 
 plot(pergore ~ perAA, gavote, xlab="Proportion African American", ylab = "Proportion for Gore", pch=20, col="blue")
-
-
 ```
 ```{r}
 gavote %>% ggplot(aes(equip, undercount)) + 
@@ -80,6 +137,7 @@ gavote %>% ggplot(aes(equip, undercount)) +
 ```{r}
 xtabs(~atlanta + rural, gavote)
 ```
+
 ```{r}
 names(gavote)
 ```
@@ -111,6 +169,8 @@ predict(lmod)
 residuals(lmod)
 ```
 ```{r}
+# to visualise all four below results, first select chunk and then run
+
 deviance(lmod)
 df.residual(lmod)
 nrow(gavote) - length(coef(lmod))
@@ -131,14 +191,14 @@ lmodsum$adj.r.squared
 ```
 
 ```{r}
-lmod
-coef(lmod)
+lmod           # formula and coeff
+coef(lmod)     # only coeff
 
-summary(lmod)
+summary(lmod)  # formula, coef, and residuals and Rsquared
 ```
 
 ```{r}
-sumary(lmod)               # library(faraway)
+sumary(lmod) # coef, summary with n, p, residual SE, and Rsquared           # library(faraway)
 ```
 ```{r}
 gavote$cpergore <- gavote$pergore - mean(gavote$pergore)
@@ -177,6 +237,7 @@ gavote[hatvalues(lmodi) > 0.3,]
 ```{r}
 termplot(lmodi, partial = TRUE, terms = 1)
 ```
+
 ```{r}
 library(MASS)
 library(dplyr)  # to avoid masking of select by MASS package
@@ -245,7 +306,7 @@ propAA <- gl(3,1,15, labels=c("low","medium","high"))
 xtabs(round(pp, 3) ~ propAA + equip,pdf)
 ```
 
-
+## end chapter 1 ----
 
 
 

@@ -20,12 +20,12 @@ femsmoke
 ```
 
 ```{r}
-(ct <- xtabs(y ~ smoker + dead, femsmoke))
+(ct <- xtabs(y ~ smoker + dead, femsmoke))   # y are already counts (not linelist) (ct=cross-table)
 ```
 
 
 ```{r}
-prop.table(ct, 1)  # 1 for row proportions (2 for col proportions)
+prop.table(ct, 1)  # 1 for row proportions, 2 for col proportions
 ```
 
 ```{r}
@@ -48,8 +48,10 @@ prop.table(xtabs(y ~ smoker + age, femsmoke), 2)
 fisher.test(cta)
 ```
 
+# Create three dimensional array, to use mantelhaen.test()
 ```{r}
 ct3  <- xtabs(y ~ smoker + dead + age, femsmoke)
+ct3
 apply(ct3, 3, function(x) (x[1,1]*x[2,2]) / (x[1,2] * x[2,1]))
 ```
 
@@ -72,7 +74,9 @@ c(deviance(modi), df.residual(modi))
 ```{r}
 coefsmoke/sum(coefsmoke)
 ```
+
 ```{r}
 prop.table(xtabs(y ~ smoker, femsmoke))
 ```
+
 
